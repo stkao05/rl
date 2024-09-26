@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from collections import deque
+from collections import deque, defaultdict
 
 from gridworld import GridWorld
 
@@ -70,10 +70,28 @@ class MonteCarloPrediction(ModelFreePrediction):
     def run(self) -> None:
         """Run the algorithm until max_episode"""
         # TODO: Update self.values with first-visit Monte-Carlo method
-        current_state = self.grid_world.reset()
+
+        state_count = defaultdict(int)
         while self.episode_counter < self.max_episode:
-            next_state, reward, done = self.collect_data()
-            continue
+            episode = []
+            init_state = self.grid_world.reset()
+            done = False
+            while not done:
+                next_state, reward, done = self.collect_data()
+                episode.append((next_state, reward))
+
+            visited = set()
+            cur_s = init_state
+            for t, (next_s, _) in enumerate(episode):
+                if cur_s in visited:
+                    cur_s = next_s
+                    continue
+
+                g = sum([r * self.discount_factor**i for i, (s, r) in enumerate(episode[t:])])
+                state_count[cur_s] += 1
+                self.values[cur_s] = self.values[cur_s] + (g - self.values[cur_s]) / state_count[cur_s]
+                visited.add(cur_s)
+                cur_s = next_s
 
 
 class TDPrediction(ModelFreePrediction):
