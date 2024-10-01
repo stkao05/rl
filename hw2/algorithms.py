@@ -72,13 +72,15 @@ class MonteCarloPrediction(ModelFreePrediction):
         # TODO: Update self.values with first-visit Monte-Carlo method
 
         state_count = defaultdict(int)
+        init_state = self.grid_world.reset()
+
         while self.episode_counter < self.max_episode:
             episode = []
-            init_state = self.grid_world.reset()
             done = False
             while not done:
                 next_state, reward, done = self.collect_data()
                 episode.append((next_state, reward))
+            next_init_state = next_state # episode has end. the next_state would return the init state for new episode
 
             visited = set()
             cur_s = init_state
@@ -92,6 +94,8 @@ class MonteCarloPrediction(ModelFreePrediction):
                 self.values[cur_s] = self.values[cur_s] + (g - self.values[cur_s]) / state_count[cur_s] # running mean
                 visited.add(cur_s)
                 cur_s = next_s
+
+            init_state = next_init_state
 
 
 class TDPrediction(ModelFreePrediction):
@@ -117,7 +121,12 @@ class TDPrediction(ModelFreePrediction):
         while self.episode_counter < self.max_episode:
             next_state, reward, done = self.collect_data()
             cur_val = self.values[current_state]
-            td_target = reward + self.discount_factor * self.values[next_state]
+
+            if done:
+                td_target = reward
+            else:
+                td_target = reward + self.discount_factor * self.values[next_state]
+
             self.values[current_state] = cur_val + self.lr * (td_target - cur_val)
             current_state = next_state
 
