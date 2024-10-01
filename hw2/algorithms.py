@@ -160,22 +160,31 @@ class NstepTDPrediction(ModelFreePrediction):
             n_history.append((current_state, reward))
             n_history = n_history[-n:]
 
-            for t in range(len(n_history)):
-                t_history = n_history[t:]
-                t_rewards = [r for _, r in t_history]
-                s, _ = t_history[0]
+            if len(n_history) != n:
+                current_state = next_state
+                continue
+
+            def backup(n_steps):
+                steps = n_history[-n_steps:]
+                rewards = [r for _, r in steps]
+                s, _ = steps[0]
 
                 if done:
-                    td_target = sum([r * self.discount_factor**i for i, r in enumerate(t_rewards)])
+                    td_target = sum([r * self.discount_factor**i for i, r in enumerate(rewards)])
                 else:
-                    td_target = (sum([r * self.discount_factor**i for i, r in enumerate(t_rewards)]) + 
-                        self.discount_factor** len(t_history) * self.values[next_state])
+                    td_target = (sum([r * self.discount_factor**i for i, r in enumerate(rewards)]) + 
+                        self.discount_factor** len(steps) * self.values[next_state])
 
                 self.values[s] = self.values[s] + self.lr * (td_target - self.values[s])
 
-            current_state = next_state
+            backup(n)
+
             if done:
+                for i in range(1, n):
+                    backup(i)
                 n_history = []
+
+            current_state = next_state
 
 
 # =========================== 2.2 model free control ===========================
