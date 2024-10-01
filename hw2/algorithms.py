@@ -152,9 +152,31 @@ class NstepTDPrediction(ModelFreePrediction):
         """Run the algorithm until max_episode"""
         # TODO: Update self.values with N-step TD Algorithm
         current_state = self.grid_world.reset()
+        n_history = []
+        n = self.n
+
         while self.episode_counter < self.max_episode:
             next_state, reward, done = self.collect_data()
-            continue
+            n_history.append((current_state, reward))
+            n_history = n_history[-n:]
+
+            for t in range(len(n_history)):
+                t_history = n_history[t:]
+                t_rewards = [r for _, r in t_history]
+                s, _ = t_history[0]
+
+                if done:
+                    td_target = sum([r * self.discount_factor**i for i, r in enumerate(t_rewards)])
+                else:
+                    td_target = (sum([r * self.discount_factor**i for i, r in enumerate(t_rewards)]) + 
+                        self.discount_factor** len(t_history) * self.values[next_state])
+
+                self.values[s] = self.values[s] + self.lr * (td_target - self.values[s])
+
+            current_state = next_state
+            if done:
+                n_history = []
+
 
 # =========================== 2.2 model free control ===========================
 class ModelFreeControl:
