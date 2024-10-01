@@ -89,7 +89,7 @@ class MonteCarloPrediction(ModelFreePrediction):
 
                 g = sum([r * self.discount_factor**i for i, (s, r) in enumerate(episode[t:])])
                 state_count[cur_s] += 1
-                self.values[cur_s] = self.values[cur_s] + (g - self.values[cur_s]) / state_count[cur_s]
+                self.values[cur_s] = self.values[cur_s] + (g - self.values[cur_s]) / state_count[cur_s] # running mean
                 visited.add(cur_s)
                 cur_s = next_s
 
@@ -112,10 +112,14 @@ class TDPrediction(ModelFreePrediction):
     def run(self) -> None:
         """Run the algorithm until max episode"""
         # TODO: Update self.values with TD(0) Algorithm
+
         current_state = self.grid_world.reset()
         while self.episode_counter < self.max_episode:
             next_state, reward, done = self.collect_data()
-            continue
+            cur_val = self.values[current_state]
+            td_target = reward + self.discount_factor * self.values[next_state]
+            self.values[current_state] = cur_val + self.lr * (td_target - cur_val)
+            current_state = next_state
 
 
 class NstepTDPrediction(ModelFreePrediction):
