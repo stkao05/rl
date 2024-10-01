@@ -152,37 +152,32 @@ class NstepTDPrediction(ModelFreePrediction):
         """Run the algorithm until max_episode"""
         # TODO: Update self.values with N-step TD Algorithm
         current_state = self.grid_world.reset()
-        n_history = []
+        history = []
         n = self.n
+
+        def backup(n_steps, done, next_state):
+            steps = history[-n_steps:]
+            rewards = [r for _, r in steps]
+            s, _ = steps[0]
+            next_state_value = 0 if done else self.values[next_state]
+            td_target = (
+                sum([r * self.discount_factor**i for i, r in enumerate(rewards)])
+                + self.discount_factor ** len(steps) * next_state_value
+            )
+            self.values[s] = self.values[s] + self.lr * (td_target - self.values[s])
 
         while self.episode_counter < self.max_episode:
             next_state, reward, done = self.collect_data()
-            n_history.append((current_state, reward))
-            n_history = n_history[-n:]
+            history.append((current_state, reward))
+            history = history[-n:]
 
-            if len(n_history) != n:
-                current_state = next_state
-                continue
-
-            def backup(n_steps):
-                steps = n_history[-n_steps:]
-                rewards = [r for _, r in steps]
-                s, _ = steps[0]
-
-                if done:
-                    td_target = sum([r * self.discount_factor**i for i, r in enumerate(rewards)])
-                else:
-                    td_target = (sum([r * self.discount_factor**i for i, r in enumerate(rewards)]) + 
-                        self.discount_factor** len(steps) * self.values[next_state])
-
-                self.values[s] = self.values[s] + self.lr * (td_target - self.values[s])
-
-            backup(n)
+            if len(history) == n:
+                backup(n, done, next_state)
 
             if done:
-                for i in range(1, n):
-                    backup(i)
-                n_history = []
+                for i in range(1, min(n, len(history))):
+                    backup(i, done, next_state)
+                history = []
 
             current_state = next_state
 
