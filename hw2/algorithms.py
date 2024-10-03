@@ -255,15 +255,9 @@ class MonteCarloPolicyIteration(ModelFreeControl):
         iter_episode = 0
         current_state = self.grid_world.reset()
 
-        # state_trace   = [current_state]
-        # action_trace  = []
-        # reward_trace  = []
-
         while iter_episode < max_episode:
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
-            # print(".")
-
             history = []
             reward_trace = []
             done = False
@@ -316,21 +310,27 @@ class SARSA(ModelFreeControl):
         """Run the algorithm until convergence."""
         # TODO: Implement the TD policy evaluation with epsilon-greedy
         iter_episode = 0
+
+        def choose_action(state):
+            if np.random.rand() < self.epsilon:
+                action = np.random.choice(self.action_space)
+            else:
+                action = self.q_values[state].argmax()
+            return action
+
         current_state = self.grid_world.reset()
-        prev_s = None
-        prev_a = None
-        prev_r = None
-        is_done = False
+        action = choose_action(current_state)
 
         while iter_episode < max_episode:
-            # TODO: write your code here
-            # hint: self.grid_world.reset() is NOT needed here
-            self.policy
+            next_state, reward, done = self.grid_world.step(action)
+            next_action = choose_action(next_state)
+            td_target = reward if done else reward + self.discount_factor * self.q_values[next_state][next_action]
+            self.q_values[current_state][action] += self.lr * (td_target - self.q_values[current_state][action])
 
-            self.grid_world.step()
+            action = next_action
+            current_state = next_state
+            iter_episode += 1
 
-            
-            raise NotImplementedError
 
 class Q_Learning(ModelFreeControl):
     def __init__(
