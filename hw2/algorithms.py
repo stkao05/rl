@@ -254,14 +254,44 @@ class MonteCarloPolicyIteration(ModelFreeControl):
         # TODO: Implement the Monte Carlo policy evaluation with epsilon-greedy
         iter_episode = 0
         current_state = self.grid_world.reset()
-        state_trace   = [current_state]
-        action_trace  = []
-        reward_trace  = []
+
+        # state_trace   = [current_state]
+        # action_trace  = []
+        # reward_trace  = []
+
         while iter_episode < max_episode:
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
-            
-            raise NotImplementedError
+
+            print(".")
+
+            history = []
+            reward_trace = []
+            done = False
+
+            while not done:
+                if np.random.rand() < self.epsilon:
+                    action = np.random.choice(self.action_space)
+                else:
+                    action = self.q_values[current_state].argmax()
+
+                next_state, reward , done = self.grid_world.step(action)
+                history.append((current_state, action, reward))
+                current_state = next_state
+                reward_trace.append(reward)
+
+            print(iter_episode, len(history))
+
+            reward_trace = np.array(reward_trace)
+            n = len(history)
+            discounts = np.power(self.discount_factor, np.arange(0, n))
+
+            for t in range(len(history)):
+                state, action, _  = history[t]
+                retrn = (reward_trace[t:] * discounts[0:n-t]).sum()
+                self.q_values[state][action] = self.lr * (retrn - self.q_values[state][action])
+
+            iter_episode += 1
 
 
 class SARSA(ModelFreeControl):
@@ -294,9 +324,14 @@ class SARSA(ModelFreeControl):
         prev_a = None
         prev_r = None
         is_done = False
+
         while iter_episode < max_episode:
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
+            self.policy
+
+            self.grid_world.step()
+
             
             raise NotImplementedError
 
