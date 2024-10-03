@@ -262,8 +262,7 @@ class MonteCarloPolicyIteration(ModelFreeControl):
         while iter_episode < max_episode:
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
-
-            print(".")
+            # print(".")
 
             history = []
             reward_trace = []
@@ -280,16 +279,14 @@ class MonteCarloPolicyIteration(ModelFreeControl):
                 current_state = next_state
                 reward_trace.append(reward)
 
-            print(iter_episode, len(history))
-
-            reward_trace = np.array(reward_trace)
             n = len(history)
+            reward_trace = np.array(reward_trace)
             discounts = np.power(self.discount_factor, np.arange(0, n))
 
-            for t in range(len(history)):
+            for t in range(n):
                 state, action, _  = history[t]
                 retrn = (reward_trace[t:] * discounts[0:n-t]).sum()
-                self.q_values[state][action] = self.lr * (retrn - self.q_values[state][action])
+                self.q_values[state][action] += self.lr * (retrn - self.q_values[state][action])
 
             iter_episode += 1
 
