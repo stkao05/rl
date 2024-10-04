@@ -254,10 +254,14 @@ class MonteCarloPolicyIteration(ModelFreeControl):
         # TODO: Implement the Monte Carlo policy evaluation with epsilon-greedy
         iter_episode = 0
         current_state = self.grid_world.reset()
+        ep_rewards = []
 
         while iter_episode < max_episode:
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
+            if iter_episode % 1000 == 0:
+                print(f"{iter_episode / max_episode * 100:.2f}")
+
             history = []
             reward_trace = []
             done = False
@@ -282,7 +286,10 @@ class MonteCarloPolicyIteration(ModelFreeControl):
                 retrn = (reward_trace[t:] * discounts[0:n-t]).sum()
                 self.q_values[state][action] += self.lr * (retrn - self.q_values[state][action])
 
+            ep_rewards.append(np.mean(reward_trace))
             iter_episode += 1
+
+        return ep_rewards
 
 
 class SARSA(ModelFreeControl):
@@ -309,7 +316,6 @@ class SARSA(ModelFreeControl):
     def run(self, max_episode=1000) -> None:
         """Run the algorithm until convergence."""
         # TODO: Implement the TD policy evaluation with epsilon-greedy
-        iter_episode = 0
 
         def choose_action(state):
             if np.random.rand() < self.epsilon:
@@ -318,18 +324,38 @@ class SARSA(ModelFreeControl):
                 action = self.q_values[state].argmax()
             return action
 
+        iter_episode = 0
         current_state = self.grid_world.reset()
         action = choose_action(current_state)
+        ep_reward = []
+        ep_loss = []
 
         while iter_episode < max_episode:
-            next_state, reward, done = self.grid_world.step(action)
-            next_action = choose_action(next_state)
-            td_target = reward if done else reward + self.discount_factor * self.q_values[next_state][next_action]
-            self.q_values[current_state][action] += self.lr * (td_target - self.q_values[current_state][action])
+            if iter_episode % 30000 == 0:
+                print(f"{iter_episode / max_episode * 100:.2f}")
 
-            action = next_action
-            current_state = next_state
+            done = False
+            reward_trace = []
+            loss_trace = []
+
+            while not done:
+                next_state, reward, done = self.grid_world.step(action)
+                next_action = choose_action(next_state)
+                td_target = reward if done else reward + self.discount_factor * self.q_values[next_state][next_action]
+                td_error = td_target - self.q_values[current_state][action]
+                self.q_values[current_state][action] += self.lr * td_error
+
+                reward_trace.append(reward)
+                loss_trace.append(abs(td_error))
+                action = next_action
+                current_state = next_state
+
+            ep_reward.append(np.mean(reward_trace))
+            ep_loss.append(np.mean(loss_trace))
             iter_episode += 1
+
+        return ep_reward, ep_loss
+
 
 
 class Q_Learning(ModelFreeControl):
@@ -374,12 +400,19 @@ class Q_Learning(ModelFreeControl):
         # transition_count = 0
 
         current_state = self.grid_world.reset()
+        ep_rewards = []
+        ep_loss = []
 
         while iter_episode < max_episode:
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
+            if iter_episode % 1000 == 0:
+                print(f"{iter_episode / max_episode * 100:.2f}")
 
             done = False
+            reward_trace = []
+            loss_trace = []
+
             while not done:
                 if np.random.rand() < self.epsilon:
                     action = np.random.choice(self.action_space)
@@ -388,6 +421,7 @@ class Q_Learning(ModelFreeControl):
 
                 next_state, reward, done = self.grid_world.step(action)
                 self.buffer.append((current_state, action, next_state, reward, done))
+                reward_trace.append(reward)
                 current_state = next_state
 
                 if len(self.buffer) % self.update_frequency == 0:
@@ -399,5 +433,12 @@ class Q_Learning(ModelFreeControl):
                             td_error = r + self.discount_factor * self.q_values[ss].max() - self.q_values[s][a]
 
                         self.q_values[s][a] += self.lr * (td_error)
+                        loss_trace.append(abs(td_error))
+
+            ep_rewards.append(np.mean(reward_trace))
+            if len(loss_trace) > 0:
+                ep_loss.append(np.mean(loss_trace))
 
             iter_episode += 1
+
+        return ep_rewards, ep_loss

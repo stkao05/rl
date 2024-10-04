@@ -131,13 +131,13 @@ def run_NstepTD_prediction(grid_world: GridWorld,seed):
     print()
     return prediction.get_all_state_values()
 
-def run_MC_policy_iteration(grid_world: GridWorld, iter_num: int):
+def run_MC_policy_iteration(grid_world: GridWorld, iter_num: int, epsilon=EPSILON):
     print(bold(underline("MC Policy Iteration")))
-    policy_iteration = MonteCarloPolicyIteration(
+    rewards = policy_iteration = MonteCarloPolicyIteration(
             grid_world, 
             discount_factor=DISCOUNT_FACTOR,
             learning_rate=LEARNING_RATE,
-            epsilon= EPSILON,
+            epsilon= epsilon,
             )
     policy_iteration.run(max_episode=iter_num)
     grid_world.visualize(
@@ -156,15 +156,19 @@ def run_MC_policy_iteration(grid_world: GridWorld, iter_num: int):
     grid_world.reset()
     print()
 
-def run_SARSA(grid_world: GridWorld, iter_num: int):
+    return rewards
+
+def run_SARSA(grid_world: GridWorld, iter_num: int, epsilon=EPSILON):
     print(bold(underline("SARSA Policy Iteration")))
     policy_iteration = SARSA(
             grid_world, 
             discount_factor=DISCOUNT_FACTOR,
             learning_rate=LEARNING_RATE,
-            epsilon= EPSILON,
+            epsilon=epsilon,
             )
-    policy_iteration.run(max_episode=iter_num)
+
+    rewards, losses = policy_iteration.run(max_episode=iter_num)
+
     grid_world.visualize(
         policy_iteration.get_max_state_values(),
         policy_iteration.get_policy_index(),
@@ -181,19 +185,21 @@ def run_SARSA(grid_world: GridWorld, iter_num: int):
     grid_world.reset()
     print()
 
+    return rewards, losses
 
-def run_Q_Learning(grid_world: GridWorld, iter_num: int):
+
+def run_Q_Learning(grid_world: GridWorld, iter_num: int, epsilon=EPSILON):
     print(bold(underline("Q_Learning Policy Iteration")))
     policy_iteration = Q_Learning(
             grid_world, 
             discount_factor=DISCOUNT_FACTOR,
             learning_rate=LEARNING_RATE,
-            epsilon= EPSILON,
+            epsilon=epsilon,
             buffer_size=BUFFER_SIZE,
             update_frequency=UPDATE_FREQUENCY,
             sample_batch_size=SAMPLE_BATCH_SIZE,
             )
-    policy_iteration.run(max_episode=iter_num)
+    rewards, losses = policy_iteration.run(max_episode=iter_num)
     grid_world.visualize(
         policy_iteration.get_max_state_values(),
         policy_iteration.get_policy_index(),
@@ -209,6 +215,8 @@ def run_Q_Learning(grid_world: GridWorld, iter_num: int):
     )
     grid_world.reset()
     print()
+
+    return rewards, losses
 
 
 def bias_variance():
@@ -278,7 +286,44 @@ if __name__ == "__main__":
     # run_MC_prediction(grid_world,seed)
 
     # # 2-2
+    episode_count = 512000
     grid_world = init_grid_world("maze.txt")
+
+    # def plot_learning(name, run_func, iteration):
+    #     epsilons = [0.1, 0.2, 0.3, 0.4]
+    #     reward_plot = []
+
+    #     for e in epsilons:
+    #         rewards = run_func(grid_world, iteration, epsilon=e)
+    #         plt.close()
+    #         rewards_avg = [np.mean(rewards[0:i+1]) for i in range(len(rewards))]
+    #         reward_plot.append(rewards_avg)
+
+    #     for e, r in zip(epsilons, reward_plot):
+    #         plt.plot(r, label=f"MC-{e}")
+
+    #     plt.legend()
+    #     plt.savefig(f"learning-{name}.png")
+    #     plt.close()
+
+
+    # rewards, losses = run_Q_Learning(grid_world, 50000)
+    # np.save("output/q_reward", rewards)
+    # np.save("output/q_loss", losses)
+
+    # losses = np.load("output/sarsa_loss.npy")
+    # rewards = np.load("output/sarsa_reward.npy")
+
+    # rewards = rewards.reshape(-1, 10).mean(axis=1)[::1000]
+    # plt.plot(rewards)
+    # plt.show()
+
+    # losses = losses.reshape(-1, 10).mean(axis=1)
+    # plt.close()
+    # plt.show()
+
+    # import code; code.interact(local=locals())
+
+    # run_SARSA(grid_world, 512000)
     # run_MC_policy_iteration(grid_world, 512000)
-    run_SARSA(grid_world, 512000)
     # run_Q_Learning(grid_world, 50000)
