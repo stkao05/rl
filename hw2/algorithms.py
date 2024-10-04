@@ -367,15 +367,37 @@ class Q_Learning(ModelFreeControl):
         """Run the algorithm until convergence."""
         # TODO: Implement the Q_Learning algorithm
         iter_episode = 0
+        # prev_s = None
+        # prev_a = None
+        # prev_r = None
+        # is_done = False
+        # transition_count = 0
+
         current_state = self.grid_world.reset()
-        prev_s = None
-        prev_a = None
-        prev_r = None
-        is_done = False
-        transition_count = 0
+
         while iter_episode < max_episode:
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
 
-            raise NotImplementedError
-            
+            done = False
+            while not done:
+                if np.random.rand() < self.epsilon:
+                    action = np.random.choice(self.action_space)
+                else:
+                    action = self.q_values[current_state].argmax()
+
+                next_state, reward, done = self.grid_world.step(action)
+                self.buffer.append((current_state, action, next_state, reward, done))
+                current_state = next_state
+
+                if len(self.buffer) % self.update_frequency == 0:
+                    for _ in range(self.sample_batch_size):
+                        (s, a, ss, r, d) = self.buffer[np.random.randint(0, len(self.buffer))]
+                        if d:
+                            td_error = r - self.q_values[s][a]
+                        else:
+                            td_error = r + self.discount_factor * self.q_values[ss].max() - self.q_values[s][a]
+
+                        self.q_values[s][a] += self.lr * (td_error)
+
+            iter_episode += 1
