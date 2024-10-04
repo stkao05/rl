@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import json
+import wandb
 
 from algorithms import (
     MonteCarloPrediction,
@@ -11,6 +12,7 @@ from algorithms import (
     Q_Learning,
 )
 from gridworld import GridWorld
+import matplotlib.pyplot as plt
 
 np.set_printoptions(threshold=np.inf, linewidth=np.inf)
 
@@ -208,16 +210,75 @@ def run_Q_Learning(grid_world: GridWorld, iter_num: int):
     grid_world.reset()
     print()
 
-if __name__ == "__main__":
-    seed = 1
-    grid_world = init_grid_world("maze.txt",INIT_POS)
-    # 2-1
-    run_MC_prediction(grid_world,seed)
-    run_TD_prediction(grid_world,seed)
-    run_NstepTD_prediction(grid_world,seed)
 
-    # 2-2
+def bias_variance():
+    v_true = np.load("/Users/stevenkao/workspace/rl/hw2/sample_solutions/prediction_GT.npy")
+
+    def bias_variance_estimate(algo):
+        run_num = 50
+        v_preds = np.zeros((run_num, grid_world.get_state_space())) # (run_num, state_size)
+        for i in range(0, run_num):
+            seed = i + 1
+            v_preds[i] = algo(grid_world, seed)
+
+        v_pred_mean = v_preds.mean(axis=0) # (state_size)
+        bias = v_pred_mean - v_true # (state_size)
+        var = ((v_preds - v_pred_mean)**2).mean(axis=0) # (state_size)
+
+        return bias, var
+
+    td_bias, td_var = bias_variance_estimate(run_TD_prediction)
+    mc_bias, mc_var = bias_variance_estimate(run_MC_prediction)
+    plt.close()
+
+    print("td bias", td_bias)
+    print("mc bias", mc_bias)
+    print("td var", td_var)
+    print("mc var", mc_var)
+
+    run = wandb.init(project="rl-hw2", name="TD")
+    wandb.log({'bias': wandb.plot.histogram(
+        wandb.Table(data=[[_] for _ in td_bias], columns=["bias"]), "bias", title="Bias")})
+    wandb.log({'var': wandb.plot.histogram(
+        wandb.Table(data=[[_] for _ in td_var], columns=["var"]), "var", title="Variance")})
+    run.finish()
+
+    run = wandb.init(project="rl-hw2", name="MC")
+    wandb.log({'bias': wandb.plot.histogram(
+        wandb.Table(data=[[_] for _ in mc_bias], columns=["bias"]), "bias", title="Bias")})
+    wandb.log({'var': wandb.plot.histogram(
+        wandb.Table(data=[[_] for _ in mc_var], columns=["var"]), "var", title="Variance")})
+    run.finish()
+
+    plt.hist(td_bias, bins=10, color="red", alpha=0.7, label="TD bias", range=(-0.2, 0.4))
+    plt.hist(mc_bias, bins=10, color="blue", alpha=0.7, label="MC bias", range=(-0.2, 0.4))
+    plt.legend(loc='upper right')
+    plt.xlabel('Bias')
+    plt.ylabel('Frequency')
+    plt.savefig("bias_hist.png")
+    plt.close()
+
+    plt.hist(td_var, bins=10, color="red", alpha=0.7, label="TD var", range=(0, 0.005))
+    plt.hist(mc_var, bins=10, color="blue", alpha=0.7, label="MC var", range=(0, 0.005))
+    plt.legend(loc='upper right')
+    plt.xlabel('Variance')
+    plt.ylabel('Frequency')
+    plt.savefig("var_hist.png")
+    plt.close()
+
+
+
+
+if __name__ == "__main__":
+    grid_world = init_grid_world("maze.txt",INIT_POS)
+
+    # # 2-1
+    # run_TD_prediction(grid_world, seed)
+    # run_NstepTD_prediction(grid_world,seed)
+    # run_MC_prediction(grid_world,seed)
+
+    # # 2-2
     grid_world = init_grid_world("maze.txt")
     # run_MC_policy_iteration(grid_world, 512000)
     run_SARSA(grid_world, 512000)
-    run_Q_Learning(grid_world, 50000)
+    # run_Q_Learning(grid_world, 50000)
