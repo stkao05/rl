@@ -278,42 +278,38 @@ def bias_variance():
 
 
 if __name__ == "__main__":
-    # episode_count = 512000
+    # seed = 1
     # grid_world = init_grid_world("maze.txt",INIT_POS)
-
     # # 2-1
-    # run_TD_prediction(grid_world, seed)
-    # run_NstepTD_prediction(grid_world,seed)
     # run_MC_prediction(grid_world,seed)
+    # run_TD_prediction(grid_world,seed)
+    # run_NstepTD_prediction(grid_world,seed)
 
     # # 2-2
-
-    # def plot_learning(name, run_func, iteration):
-    #     epsilons = [0.1, 0.2, 0.3, 0.4]
-    #     reward_plot = []
-
-    #     for e in epsilons:
-    #         rewards = run_func(grid_world, iteration, epsilon=e)
-    #         plt.close()
-    #         rewards_avg = [np.mean(rewards[0:i+1]) for i in range(len(rewards))]
-    #         reward_plot.append(rewards_avg)
-
-    #     for e, r in zip(epsilons, reward_plot):
-    #         plt.plot(r, label=f"MC-{e}")
-
-    #     plt.legend()
-    #     plt.savefig(f"learning-{name}.png")
-    #     plt.close()
+    # grid_world = init_grid_world("maze.txt")
+    # run_MC_policy_iteration(grid_world, 512000)
+    # run_SARSA(grid_world, 512000)
+    # run_Q_Learning(grid_world, 50000)
 
 
-    # rewards, losses = run_Q_Learning(grid_world, 50000)
-    # np.save("output/q_reward", rewards)
-    # np.save("output/q_loss", losses)
+    ## -------------------------- ##
+
+    grid_world = init_grid_world("maze.txt")
+
+    def plot_learning(name, run_func, iteration):
+        epsilons = [0.1, 0.2, 0.3, 0.4]
+        for e in epsilons:
+            losses, rewards = run_func(grid_world, iteration, epsilon=e)
+            np.save(f"output/{name}-{epsilons*10}-reward", rewards)
+            np.save(f"output/{name}-{epsilons*10}-loss", losses)
+
+    plot_learning("mc", run_MC_policy_iteration, 512000)
+    plot_learning("sarsa", run_SARSA, 512000)
+    plot_learning("q", run_Q_Learning, 50000)
 
     # losses = np.load("output/sarsa_loss.npy")
     # rewards = np.load("output/sarsa_reward.npy")
-
-    # rewards = rewards.reshape(-1, 10).mean(axis=1)[::1000]
+    # rewards = rewards.reshape(-1, 10).mean(axis=1)[::100]
     # plt.plot(rewards)
     # plt.show()
 
@@ -326,16 +322,3 @@ if __name__ == "__main__":
     # run_SARSA(grid_world, 512000)
     # run_MC_policy_iteration(grid_world, 512000)
     # run_Q_Learning(grid_world, 50000)
-
-    seed = 1
-    grid_world = init_grid_world("maze.txt",INIT_POS)
-    # 2-1
-    run_MC_prediction(grid_world,seed)
-    run_TD_prediction(grid_world,seed)
-    run_NstepTD_prediction(grid_world,seed)
-
-    # 2-2
-    grid_world = init_grid_world("maze.txt")
-    run_MC_policy_iteration(grid_world, 512000)
-    run_SARSA(grid_world, 512000)
-    run_Q_Learning(grid_world, 50000)
