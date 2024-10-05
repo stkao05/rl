@@ -278,7 +278,8 @@ def bias_variance():
 
 
 if __name__ == "__main__":
-    grid_world = init_grid_world("maze.txt",INIT_POS)
+    # episode_count = 512000
+    # grid_world = init_grid_world("maze.txt",INIT_POS)
 
     # # 2-1
     # run_TD_prediction(grid_world, seed)
@@ -286,8 +287,6 @@ if __name__ == "__main__":
     # run_MC_prediction(grid_world,seed)
 
     # # 2-2
-    episode_count = 512000
-    grid_world = init_grid_world("maze.txt")
 
     # def plot_learning(name, run_func, iteration):
     #     epsilons = [0.1, 0.2, 0.3, 0.4]
@@ -327,3 +326,16 @@ if __name__ == "__main__":
     # run_SARSA(grid_world, 512000)
     # run_MC_policy_iteration(grid_world, 512000)
     # run_Q_Learning(grid_world, 50000)
+
+    seed = 1
+    grid_world = init_grid_world("maze.txt",INIT_POS)
+    # 2-1
+    run_MC_prediction(grid_world,seed)
+    run_TD_prediction(grid_world,seed)
+    run_NstepTD_prediction(grid_world,seed)
+
+    # 2-2
+    grid_world = init_grid_world("maze.txt")
+    run_MC_policy_iteration(grid_world, 512000)
+    run_SARSA(grid_world, 512000)
+    run_Q_Learning(grid_world, 50000)
