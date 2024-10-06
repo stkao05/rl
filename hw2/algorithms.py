@@ -280,7 +280,6 @@ class MonteCarloPolicyIteration(ModelFreeControl):
                 current_state = next_state
 
             n = len(history)
-            print("history", n)
             discounts = np.power(self.discount_factor, np.arange(0, n))
             reward_trace = np.array(reward_trace)
 

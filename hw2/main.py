@@ -279,17 +279,17 @@ def bias_variance():
 
 if __name__ == "__main__":
     seed = 1
-    # grid_world = init_grid_world("maze.txt",INIT_POS)
-    # # 2-1
-    # run_MC_prediction(grid_world,seed)
-    # run_TD_prediction(grid_world,seed)
-    # run_NstepTD_prediction(grid_world,seed)
+    grid_world = init_grid_world("maze.txt",INIT_POS)
+    # 2-1
+    run_MC_prediction(grid_world,seed)
+    run_TD_prediction(grid_world,seed)
+    run_NstepTD_prediction(grid_world,seed)
 
-    # # 2-2
-    # grid_world = init_grid_world("maze.txt")
-    # run_MC_policy_iteration(grid_world, 512000)
-    # run_SARSA(grid_world, 512000)
-    # run_Q_Learning(grid_world, 50000)
+    # 2-2
+    grid_world = init_grid_world("maze.txt")
+    run_MC_policy_iteration(grid_world, 512000)
+    run_SARSA(grid_world, 512000)
+    run_Q_Learning(grid_world, 50000)
 
 
     ## -------------------------- ##
@@ -315,7 +315,7 @@ if __name__ == "__main__":
     # plot_learning("mc", run_MC_policy_iteration, 512000, epsilons=[0.1])
     # plot_learning("mc", run_MC_policy_iteration, 512000, epsilons=[0.2, 0.3, 0.4])
     # plot_learning("sarsa", run_SARSA, 512000)
-    plot_learning("q", run_Q_Learning, 512000)
+    # plot_learning("q", run_Q_Learning, 512000)
 
     # --------- #
 
@@ -324,13 +324,13 @@ if __name__ == "__main__":
 
 
     # --- per espilon ------ #
-    color = {
-        "mc": "deepskyblue",
-        "sarsa": "orange",
-        "q": "green",
-    }
+    # color = {
+    #     "mc": "deepskyblue",
+    #     "sarsa": "orange",
+    #     "q": "green",
+    # }
 
-    plt.close()
+    # plt.close()
     # for type in ["loss", "reward"]:
     #     for e in epsilons:
     #         for name in names:
