@@ -2,6 +2,7 @@ import random
 import numpy as np
 import json
 import wandb
+import time
 
 from algorithms import (
     MonteCarloPrediction,
@@ -133,13 +134,13 @@ def run_NstepTD_prediction(grid_world: GridWorld,seed):
 
 def run_MC_policy_iteration(grid_world: GridWorld, iter_num: int, epsilon=EPSILON):
     print(bold(underline("MC Policy Iteration")))
-    rewards = policy_iteration = MonteCarloPolicyIteration(
+    policy_iteration = MonteCarloPolicyIteration(
             grid_world, 
             discount_factor=DISCOUNT_FACTOR,
             learning_rate=LEARNING_RATE,
             epsilon= epsilon,
             )
-    policy_iteration.run(max_episode=iter_num)
+    reward, loss = policy_iteration.run(max_episode=iter_num)
     grid_world.visualize(
         policy_iteration.get_max_state_values(),
         policy_iteration.get_policy_index(),
@@ -156,7 +157,7 @@ def run_MC_policy_iteration(grid_world: GridWorld, iter_num: int, epsilon=EPSILO
     grid_world.reset()
     print()
 
-    return rewards
+    return reward, loss
 
 def run_SARSA(grid_world: GridWorld, iter_num: int, epsilon=EPSILON):
     print(bold(underline("SARSA Policy Iteration")))
@@ -274,11 +275,8 @@ def bias_variance():
     plt.savefig("var_hist.png")
     plt.close()
 
-
-
-
 if __name__ == "__main__":
-    # seed = 1
+    seed = 1
     # grid_world = init_grid_world("maze.txt",INIT_POS)
     # # 2-1
     # run_MC_prediction(grid_world,seed)
@@ -297,24 +295,35 @@ if __name__ == "__main__":
     grid_world = init_grid_world("maze.txt")
 
     def plot_learning(name, run_func, iteration):
-        epsilons = [0.1, 0.2, 0.3, 0.4]
+        # epsilons = [0.1, 0.2, 0.3, 0.4]
+        epsilons = [0.2, 0.3, 0.4]
         for e in epsilons:
+            start_time = time.time()
             losses, rewards = run_func(grid_world, iteration, epsilon=e)
-            np.save(f"output/{name}-{epsilons*10}-reward", rewards)
-            np.save(f"output/{name}-{epsilons*10}-loss", losses)
+            end_time = time.time()
+
+            np.save(f"output/{name}-{e}-reward", rewards)
+            np.save(f"output/{name}-{e}-loss", losses)
+            print(f"{name}-{e}: {end_time - start_time:.2f} seconds")
 
     plot_learning("mc", run_MC_policy_iteration, 512000)
-    plot_learning("sarsa", run_SARSA, 512000)
-    plot_learning("q", run_Q_Learning, 50000)
+    # plot_learning("sarsa", run_SARSA, 512000)
+    # plot_learning("q", run_Q_Learning, 50000)
 
-    # losses = np.load("output/sarsa_loss.npy")
-    # rewards = np.load("output/sarsa_reward.npy")
+    # plt.close()
+
+    # name = "mc"
+    # e = 0.2
+    # rewards = np.load(f"output/{name}-{e}-reward.npy")
     # rewards = rewards.reshape(-1, 10).mean(axis=1)[::100]
     # plt.plot(rewards)
+    # plt.title(f"{name}-{e}-reward")
     # plt.show()
 
-    # losses = losses.reshape(-1, 10).mean(axis=1)
-    # plt.close()
+    # losses = np.load(f"output/{name}-{e}-loss.npy")
+    # losses = losses.reshape(-1, 10).mean(axis=1)[::100]
+    # plt.plot(losses)
+    # plt.title(f"{name}-{e}-loss")
     # plt.show()
 
     # import code; code.interact(local=locals())

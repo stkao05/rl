@@ -255,6 +255,7 @@ class MonteCarloPolicyIteration(ModelFreeControl):
         iter_episode = 0
         current_state = self.grid_world.reset()
         ep_rewards = []
+        ep_loss = []
 
         while iter_episode < max_episode:
             # TODO: write your code here
@@ -264,6 +265,7 @@ class MonteCarloPolicyIteration(ModelFreeControl):
 
             history = []
             reward_trace = []
+            loss_trace = []
             done = False
 
             while not done:
@@ -274,22 +276,26 @@ class MonteCarloPolicyIteration(ModelFreeControl):
 
                 next_state, reward , done = self.grid_world.step(action)
                 history.append((current_state, action, reward))
-                current_state = next_state
                 reward_trace.append(reward)
+                current_state = next_state
 
             n = len(history)
-            reward_trace = np.array(reward_trace)
+            print("history", n)
             discounts = np.power(self.discount_factor, np.arange(0, n))
+            reward_trace = np.array(reward_trace)
 
             for t in range(n):
                 state, action, _  = history[t]
                 retrn = (reward_trace[t:] * discounts[0:n-t]).sum()
-                self.q_values[state][action] += self.lr * (retrn - self.q_values[state][action])
+                error = retrn - self.q_values[state][action]
+                self.q_values[state][action] += self.lr * error
+                loss_trace.append(error)
 
+            ep_loss.append(np.mean(loss_trace))
             ep_rewards.append(np.mean(reward_trace))
             iter_episode += 1
 
-        return ep_rewards
+        return ep_rewards, ep_loss
 
 
 class SARSA(ModelFreeControl):
@@ -393,12 +399,6 @@ class Q_Learning(ModelFreeControl):
         """Run the algorithm until convergence."""
         # TODO: Implement the Q_Learning algorithm
         iter_episode = 0
-        # prev_s = None
-        # prev_a = None
-        # prev_r = None
-        # is_done = False
-        # transition_count = 0
-
         current_state = self.grid_world.reset()
         ep_rewards = []
         ep_loss = []
