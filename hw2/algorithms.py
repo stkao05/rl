@@ -289,7 +289,7 @@ class MonteCarloPolicyIteration(ModelFreeControl):
                 retrn = (reward_trace[t:] * discounts[0:n-t]).sum()
                 error = retrn - self.q_values[state][action]
                 self.q_values[state][action] += self.lr * error
-                loss_trace.append(error)
+                loss_trace.append(abs(error))
 
             ep_loss.append(np.mean(loss_trace))
             ep_rewards.append(np.mean(reward_trace))
@@ -407,7 +407,7 @@ class Q_Learning(ModelFreeControl):
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
             if iter_episode % 1000 == 0:
-                print(f"{iter_episode / max_episode * 100:.2f}")
+                print(f"{iter_episode / max_episode * 100:.2f}: {len(ep_rewards)} / {iter_episode} / {max_episode}")
 
             done = False
             reward_trace = []
@@ -436,7 +436,7 @@ class Q_Learning(ModelFreeControl):
                         loss_trace.append(abs(td_error))
 
             ep_rewards.append(np.mean(reward_trace))
-            if len(loss_trace) > 0:
+            if len(loss_trace) > 0: # first few episode might not have enough item in the buffer to trigger the update
                 ep_loss.append(np.mean(loss_trace))
 
             iter_episode += 1

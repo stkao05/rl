@@ -4,6 +4,8 @@ import json
 import wandb
 import time
 
+import wandb.plot
+
 from algorithms import (
     MonteCarloPrediction,
     TDPrediction,
@@ -292,11 +294,15 @@ if __name__ == "__main__":
 
     ## -------------------------- ##
 
+    plt.close()
+    epsilons = [0.1, 0.2, 0.3, 0.4]
+    names = ["mc", "sarsa", "q"]
     grid_world = init_grid_world("maze.txt")
 
-    def plot_learning(name, run_func, iteration):
-        # epsilons = [0.1, 0.2, 0.3, 0.4]
-        epsilons = [0.2, 0.3, 0.4]
+    def plot_learning(name, run_func, iteration, epsilons=None):
+        if not epsilons:
+            epsilons = [0.1, 0.2, 0.3, 0.4]
+
         for e in epsilons:
             start_time = time.time()
             losses, rewards = run_func(grid_world, iteration, epsilon=e)
@@ -306,28 +312,68 @@ if __name__ == "__main__":
             np.save(f"output/{name}-{e}-loss", losses)
             print(f"{name}-{e}: {end_time - start_time:.2f} seconds")
 
-    plot_learning("mc", run_MC_policy_iteration, 512000)
+    # plot_learning("mc", run_MC_policy_iteration, 512000, epsilons=[0.2, 0.3, 0.4])
     # plot_learning("sarsa", run_SARSA, 512000)
-    # plot_learning("q", run_Q_Learning, 50000)
 
+    # --------- #
+
+    # import os
+    # os.mkdir("figs")
+
+
+    # --- per espilon ------ #
+    color = {
+        "mc": "blue",
+        "sarsa": "orange",
+        "q": "green",
+    }
+
+    plt.close()
+    for type in ["loss", "reward"]:
+        for e in epsilons:
+            for name in names:
+                if name == "mc" and e == 0.1:
+                    continue
+                items = np.load(f"output/{name}-{e}-{type}.npy")
+
+                n = 20
+                if len(items) % n != 0:
+                    items = items[0: n * (len(items) // n)]
+
+                items = items.reshape(-1, n).mean(axis=1)[::100]
+                plt.plot(items, label=f"{name}", alpha=0.7, color=color[name])
+
+            plt.title(f"{type} (epsilon = {e})")
+            plt.legend()
+            plt.savefig(f"figs/episolon-{e}-{type}.png")
+            plt.close()
+
+
+    # --- per algo ------ #
     # plt.close()
 
-    # name = "mc"
-    # e = 0.2
-    # rewards = np.load(f"output/{name}-{e}-reward.npy")
-    # rewards = rewards.reshape(-1, 10).mean(axis=1)[::100]
-    # plt.plot(rewards)
-    # plt.title(f"{name}-{e}-reward")
-    # plt.show()
+    # for type in ["loss", "reward"]:
+    #     for name in ["q"]:
+    #         for e in epsilons:
+    #             if name == "mc" and e == 0.1:
+    #                 continue
+    #             items = np.load(f"output/{name}-{e}-{type}.npy")
+    #             n = 10
+    #             if len(items) % n != 0:
+    #                 items = items[0: n * (len(items) // n)]
 
-    # losses = np.load(f"output/{name}-{e}-loss.npy")
-    # losses = losses.reshape(-1, 10).mean(axis=1)[::100]
-    # plt.plot(losses)
-    # plt.title(f"{name}-{e}-loss")
-    # plt.show()
+    #             items = items.reshape(-1, n).mean(axis=1)[::100]
+    #             plt.plot(items, label=f"e={e}", alpha=0.7)
+
+    #         plt.title(f"{type} for {name}")
+    #         plt.legend()
+    #         plt.savefig(f"figs/{name}-{type}.png")
+    #         plt.close()
+
+    # name = "q"
+    # for e in epsilons:
+    #     losses = np.load(f"output/{name}-{e}-loss.npy")
+    #     reward = np.load(f"output/{name}-{e}-reward.npy")
+    #     print(losses.shape, reward.shape)
 
     # import code; code.interact(local=locals())
-
-    # run_SARSA(grid_world, 512000)
-    # run_MC_policy_iteration(grid_world, 512000)
-    # run_Q_Learning(grid_world, 50000)
