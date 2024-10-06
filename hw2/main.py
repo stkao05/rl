@@ -312,8 +312,10 @@ if __name__ == "__main__":
             np.save(f"output/{name}-{e}-loss", losses)
             print(f"{name}-{e}: {end_time - start_time:.2f} seconds")
 
+    # plot_learning("mc", run_MC_policy_iteration, 512000, epsilons=[0.1])
     # plot_learning("mc", run_MC_policy_iteration, 512000, epsilons=[0.2, 0.3, 0.4])
     # plot_learning("sarsa", run_SARSA, 512000)
+    plot_learning("q", run_Q_Learning, 512000)
 
     # --------- #
 
@@ -323,30 +325,30 @@ if __name__ == "__main__":
 
     # --- per espilon ------ #
     color = {
-        "mc": "blue",
+        "mc": "deepskyblue",
         "sarsa": "orange",
         "q": "green",
     }
 
     plt.close()
-    for type in ["loss", "reward"]:
-        for e in epsilons:
-            for name in names:
-                if name == "mc" and e == 0.1:
-                    continue
-                items = np.load(f"output/{name}-{e}-{type}.npy")
+    # for type in ["loss", "reward"]:
+    #     for e in epsilons:
+    #         for name in names:
+    #             # if name == "mc" and e == 0.1:
+    #             #     continue
+    #             items = np.load(f"output/{name}-{e}-{type}.npy")
 
-                n = 20
-                if len(items) % n != 0:
-                    items = items[0: n * (len(items) // n)]
+    #             n = 20
+    #             if len(items) % n != 0:
+    #                 items = items[0: n * (len(items) // n)]
 
-                items = items.reshape(-1, n).mean(axis=1)[::100]
-                plt.plot(items, label=f"{name}", alpha=0.7, color=color[name])
+    #             items = items.reshape(-1, n).mean(axis=1)[::100]
+    #             plt.plot(items, label=f"{name}", alpha=0.7, color=color[name])
 
-            plt.title(f"{type} (epsilon = {e})")
-            plt.legend()
-            plt.savefig(f"figs/episolon-{e}-{type}.png")
-            plt.close()
+    #         plt.title(f"{type} (epsilon = {e})")
+    #         plt.legend(loc="upper right")
+    #         plt.savefig(f"figs/episolon-{e}-{type}.png")
+    #         plt.close()
 
 
     # --- per algo ------ #
@@ -376,4 +378,21 @@ if __name__ == "__main__":
     #     reward = np.load(f"output/{name}-{e}-reward.npy")
     #     print(losses.shape, reward.shape)
 
+    # type = "loss"
+    # name = "q"
+    # for e in [0.2, 0.3, 0.4]:
+    #     if name == "mc" and e == 0.1:
+    #         continue
+    #     items = np.load(f"output/{name}-{e}-{type}.npy")
+    #     n = 10
+    #     if len(items) % n != 0:
+    #         items = items[0: n * (len(items) // n)]
+
+    #     items = items.reshape(-1, n).mean(axis=1)[200:-1:100]
+    #     plt.plot(items, label=f"e={e}", alpha=0.7)
+
+    # plt.title(f"{type} for {name}")
+    # plt.legend(loc="upper right")
+    # plt.savefig(f"figs/{name}-{type}.png")
+    # plt.close()
     # import code; code.interact(local=locals())
