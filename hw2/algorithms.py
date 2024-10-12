@@ -260,8 +260,8 @@ class MonteCarloPolicyIteration(ModelFreeControl):
         while iter_episode < max_episode:
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
-            if iter_episode % 1000 == 0:
-                print(f"{iter_episode / max_episode * 100:.2f}")
+            # if iter_episode % 1000 == 0:
+            #     print(f"{iter_episode / max_episode * 100:.2f}")
 
             history = []
             reward_trace = []
@@ -283,15 +283,18 @@ class MonteCarloPolicyIteration(ModelFreeControl):
             discounts = np.power(self.discount_factor, np.arange(0, n))
             reward_trace = np.array(reward_trace)
 
+            # if n > 1000000:
+            #     print("large history", n)
+
             for t in range(n):
                 state, action, _  = history[t]
                 retrn = (reward_trace[t:] * discounts[0:n-t]).sum()
                 error = retrn - self.q_values[state][action]
                 self.q_values[state][action] += self.lr * error
-                loss_trace.append(abs(error))
+                # loss_trace.append(abs(error))
 
-            ep_loss.append(np.mean(loss_trace))
-            ep_rewards.append(np.mean(reward_trace))
+            # ep_loss.append(np.mean(loss_trace))
+            # ep_rewards.append(np.mean(reward_trace))
             iter_episode += 1
 
         return ep_rewards, ep_loss
@@ -336,8 +339,8 @@ class SARSA(ModelFreeControl):
         ep_loss = []
 
         while iter_episode < max_episode:
-            if iter_episode % 30000 == 0:
-                print(f"{iter_episode / max_episode * 100:.2f}")
+            # if iter_episode % 30000 == 0:
+            #     print(f"{iter_episode / max_episode * 100:.2f}")
 
             done = False
             reward_trace = []
@@ -350,13 +353,13 @@ class SARSA(ModelFreeControl):
                 td_error = td_target - self.q_values[current_state][action]
                 self.q_values[current_state][action] += self.lr * td_error
 
-                reward_trace.append(reward)
-                loss_trace.append(abs(td_error))
+                # reward_trace.append(reward)
+                # loss_trace.append(abs(td_error))
                 action = next_action
                 current_state = next_state
 
-            ep_reward.append(np.mean(reward_trace))
-            ep_loss.append(np.mean(loss_trace))
+            # ep_reward.append(np.mean(reward_trace))
+            # ep_loss.append(np.mean(loss_trace))
             iter_episode += 1
 
         return ep_reward, ep_loss
@@ -405,8 +408,8 @@ class Q_Learning(ModelFreeControl):
         while iter_episode < max_episode:
             # TODO: write your code here
             # hint: self.grid_world.reset() is NOT needed here
-            if iter_episode % 1000 == 0:
-                print(f"{iter_episode / max_episode * 100:.2f}: {len(ep_rewards)} / {iter_episode} / {max_episode}")
+            # if iter_episode % 1000 == 0:
+            #     print(f"{iter_episode / max_episode * 100:.2f}: {len(ep_rewards)} / {iter_episode} / {max_episode}")
 
             done = False
             reward_trace = []
@@ -420,7 +423,7 @@ class Q_Learning(ModelFreeControl):
 
                 next_state, reward, done = self.grid_world.step(action)
                 self.buffer.append((current_state, action, next_state, reward, done))
-                reward_trace.append(reward)
+                # reward_trace.append(reward)
                 current_state = next_state
 
                 if len(self.buffer) % self.update_frequency == 0:
@@ -432,11 +435,11 @@ class Q_Learning(ModelFreeControl):
                             td_error = r + self.discount_factor * self.q_values[ss].max() - self.q_values[s][a]
 
                         self.q_values[s][a] += self.lr * (td_error)
-                        loss_trace.append(abs(td_error))
+                        # loss_trace.append(abs(td_error))
 
-            ep_rewards.append(np.mean(reward_trace))
-            if len(loss_trace) > 0: # first few episode might not have enough item in the buffer to trigger the update
-                ep_loss.append(np.mean(loss_trace))
+            # ep_rewards.append(np.mean(reward_trace))
+            # if len(loss_trace) > 0: # first few episode might not have enough item in the buffer to trigger the update
+            #     ep_loss.append(np.mean(loss_trace))
 
             iter_episode += 1
 
