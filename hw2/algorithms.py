@@ -267,7 +267,6 @@ class MonteCarloPolicyIteration(ModelFreeControl):
             #     print(f"{iter_episode / max_episode * 100:.2f}")
 
             history = []
-            reward_trace = []
             loss_trace = []
             done = False
 
@@ -279,20 +278,17 @@ class MonteCarloPolicyIteration(ModelFreeControl):
 
                 next_state, reward , done = self.grid_world.step(action)
                 history.append((current_state, action, reward))
-                reward_trace.append(reward)
                 current_state = next_state
 
             n = len(history)
-            discounts = np.power(self.discount_factor, np.arange(0, n))
-            reward_trace = np.array(reward_trace)
-
-            # if n > 1000000:
+            # if n > 100000:
             #     print("large history", n)
 
-            for t in range(n):
-                state, action, _  = history[t]
-                retrn = (reward_trace[t:] * discounts[0:n-t]).sum()
-                error = retrn - self.q_values[state][action]
+            g = 0
+            for t in reversed(range(n)):
+                state, action, reward  = history[t]
+                g = self.discount_factor * g + reward
+                error = g - self.q_values[state][action]
                 self.q_values[state][action] += self.lr * error
                 # loss_trace.append(abs(error))
 
