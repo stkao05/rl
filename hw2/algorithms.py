@@ -71,31 +71,34 @@ class MonteCarloPrediction(ModelFreePrediction):
         """Run the algorithm until max_episode"""
         # TODO: Update self.values with first-visit Monte-Carlo method
 
-        state_count = defaultdict(int)
         init_state = self.grid_world.reset()
+        mc_returns = defaultdict(list)
 
         while self.episode_counter < self.max_episode:
+            # new episode
             episode = []
             done = False
+            cur_state = init_state
+            first_appear = defaultdict(int) # at which timestep a state first appear
+
             while not done:
+                if cur_state not in first_appear:
+                    first_appear[cur_state] = len(episode)
+
                 next_state, reward, done = self.collect_data()
-                episode.append((next_state, reward))
-            next_init_state = next_state # episode has end. the next_state would return the init state for new episode
+                episode.append((cur_state, reward))
+                cur_state = next_state
 
-            visited = set()
-            cur_s = init_state
-            for t, (next_s, _) in enumerate(episode):
-                if cur_s in visited:
-                    cur_s = next_s
+            # episode has end. the next_state would return the init state for new episode
+            init_state = next_state 
+
+            retrn = 0
+            for t, (cur_state, reward) in reversed(list(enumerate(episode))):
+                retrn = self.discount_factor * retrn + reward
+                if first_appear[cur_state] < t:
                     continue
-
-                g = sum([r * self.discount_factor**i for i, (s, r) in enumerate(episode[t:])])
-                state_count[cur_s] += 1
-                self.values[cur_s] = self.values[cur_s] + (g - self.values[cur_s]) / state_count[cur_s] # running mean
-                visited.add(cur_s)
-                cur_s = next_s
-
-            init_state = next_init_state
+                mc_returns[cur_state].append(retrn)
+                self.values[cur_state] = np.mean(mc_returns[cur_state])
 
 
 class TDPrediction(ModelFreePrediction):
