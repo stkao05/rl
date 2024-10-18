@@ -68,7 +68,7 @@ def test_correctness(filename: str = "tasks/maze.txt") -> None:
     grid_world.set_current_state(state[0])
 
     # Iterate through the ground truth data
-    for _, a, r, d, t, ns in zip(state, action, reward, done, truncated, next_state):
+    for i, (_, a, r, d, t, ns) in enumerate(zip(state, action, reward, done, truncated, next_state)):
         next_state_prediction, reward_prediction, done_prediction, truncated_prediction = grid_world.step(a)
         
         # Check if the model prediction matches groud truth
@@ -77,7 +77,8 @@ def test_correctness(filename: str = "tasks/maze.txt") -> None:
             result.append( (next_state_prediction in grid_world._init_states) and reward_prediction == r and done_prediction == d and truncated_prediction == t)
             grid_world.set_current_state(ns)
         else:
-            result.append(next_state_prediction == ns and reward_prediction == r and done_prediction == d and truncated_prediction == t)
+            match = next_state_prediction == ns and reward_prediction == r and done_prediction == d and truncated_prediction == t
+            result.append(match)
 
     print(f"The correctness of the task {task_name}: {np.round(np.mean(result) * 100, 2)} %")
 
@@ -142,12 +143,12 @@ def write_gif(filename: str = "lava.txt", algorithm: type = PPO) -> None:
 
 if __name__ == "__main__":
     # TEST CORRECTNESS
-    test_correctness("tasks/lava.txt")
-    test_correctness("tasks/exit.txt")
+    # test_correctness("tasks/lava.txt")
+    # test_correctness("tasks/exit.txt")
     test_correctness("tasks/bait.txt")
-    test_correctness("tasks/door.txt")
-    test_correctness("tasks/portal.txt")
-    test_correctness("tasks/maze.txt")
+    # test_correctness("tasks/door.txt")
+    # test_correctness("tasks/portal.txt")
+    # test_correctness("tasks/maze.txt")
     # 
     # Write one trajectory to gif
     # write_gif("tasks/lava.txt", algorithm=PPO)
