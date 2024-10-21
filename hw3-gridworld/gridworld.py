@@ -1,4 +1,3 @@
-import os
 from typing import Any
 
 import gymnasium as gym
@@ -98,7 +97,7 @@ class GridWorld:
         self._state_list = []
         self._current_state = 0
         self.max_step = max_step
-        self.maze_name = os.path.split(maze_file)[1].replace(".txt", "").capitalize()
+        self.maze_name = maze_file.split('/')[-1].replace(".txt", "").capitalize()
         self._read_maze(maze_file)
         self.render_init(self.maze_name)
 
@@ -439,7 +438,6 @@ class GridWorld:
             tuple: next_state, reward, done, truncation
         """
         # TODO implement the step function here
-
         current_coord = self._state_list[self._current_state]
 
         if self._is_goal_state(current_coord):
@@ -474,6 +472,7 @@ class GridWorld:
             int: initial state
         """
         # TODO implement the reset function here
+
         self._current_state = np.random.choice(self._init_states)
         self.step_reward = self._step_reward
         self.place_bait()
