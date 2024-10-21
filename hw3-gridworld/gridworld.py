@@ -19,6 +19,19 @@ COLORS = [
     "skyblue"
 ]
 
+def read_maze(maze_file: str) -> None:
+    """Read the maze file
+    Returns:
+        np.ndarray: Maze
+    """
+    state_list = []
+    maze = np.loadtxt(maze_file, dtype=np.uint8)
+    for i in range(maze.shape[0]):
+        for j in range(maze.shape[1]):
+            if maze[i, j] != 1:
+                state_list.append((i, j))
+    return maze
+
 
 class GridWorld:
     """Grid World"""
@@ -438,31 +451,39 @@ class GridWorld:
             tuple: next_state, reward, done, truncation
         """
         # TODO implement the step function here
+
         current_coord = self._state_list[self._current_state]
+        truncation = self._step_count + 1 >= self.max_step
 
         if self._is_goal_state(current_coord):
             next_state = self.reset()
-            return next_state, self._goal_reward, True, False
+            return next_state, self._goal_reward, True, truncation
 
         if self._is_trap_state(current_coord):
             next_state = self.reset()
-            return next_state, self._trap_reward, True, False
+            return next_state, self._trap_reward, True, truncation
 
-        # truncation = self._step_count + 1 >= self.max_step
-        # if truncation:
-        #     next_state = self.reset()
-        #     return next_state, self.step_reward, 
-    
+        if self._is_exit_state(current_coord):
+            next_state = self.reset()
+            return next_state, self._exit_reward, True, truncation
+
         next_state_coord = self._get_next_state(current_coord, action)
-        reward = self.step_reward
         next_state = self._state_list.index(next_state_coord)
         self.set_current_state(next_state)
+        reward = self.step_reward
 
         if self._is_bait_state(next_state_coord):
             self.bite()
             reward = self._bait_reward
+
+        if self._is_lava_state(next_state_coord):
+            # terminate immeidately after enter lava
+            return next_state, self.step_reward, True, truncation
+
+        # if self._is_key_state(next_state_coord):
+        #     self.open_door()
         
-        return next_state, reward, False, False
+        return next_state, reward, False, truncation
 
 
     def reset(self) -> int:
