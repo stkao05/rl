@@ -467,9 +467,13 @@ class GridWorld:
             next_state = self.reset()
             return next_state, self._exit_reward, True, truncation
 
+        if self._is_key_state(current_coord):
+            self.open_door()
+
         next_state_coord = self._get_next_state(current_coord, action)
-        next_state = self._state_list.index(next_state_coord)
-        self.set_current_state(next_state)
+        _next_state = self._state_list.index(next_state_coord)
+        self.set_current_state(_next_state)
+        next_state = _next_state + len(self._state_list) if self._is_opened else _next_state
         reward = self.step_reward
 
         if self._is_bait_state(next_state_coord):
@@ -496,6 +500,7 @@ class GridWorld:
 
         self._current_state = np.random.choice(self._init_states)
         self.step_reward = self._step_reward
+        self._step_count = 0
         self.place_bait()
 
         return self._current_state
