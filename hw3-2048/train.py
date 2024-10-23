@@ -9,6 +9,7 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecVideoRecorder
 from stable_baselines3 import A2C, DQN, PPO, SAC
 from stable_baselines3.common.logger import configure
+import numpy as np
 
 warnings.filterwarnings("ignore")
 register(id="2048-v0", entry_point="envs:My2048Env")
@@ -18,12 +19,11 @@ my_config = {
     "algorithm": PPO,
     "policy_network": "MlpPolicy",
     "save_path": "models/sample_model",
-    "epoch_num": 50,
-    "eval_episode_num": 50,
+    "epoch_num": 10,
+    "eval_episode_num": 100,
     "timesteps_per_epoch": 1000,
     "learning_rate": 1e-4,
 }
-
 
 def make_env():
     env = gym.make("2048-v0")
@@ -32,8 +32,9 @@ def make_env():
 
 def eval(env, model, eval_episode_num):
     """Evaluate the model and return avg_score and avg_highest"""
-    avg_score = 0
-    avg_highest = 0
+    score = []
+    highest = []
+
     for seed in range(eval_episode_num):
         done = False
         env.seed(seed) # set seed using old Gym API
@@ -43,13 +44,21 @@ def eval(env, model, eval_episode_num):
             action, _state = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
 
-        avg_highest += info[0]["highest"]
-        avg_score += info[0]["score"]
+        score.append(info[0]["score"])
+        highest.append(info[0]["highest"])
 
-    avg_highest /= eval_episode_num
-    avg_score /= eval_episode_num
+    stats = {
+        "score_mean": np.mean(score),
+        "score_median": np.median(score),
+        "score_max": np.max(score),
+        "score_std": np.std(score),
+        "highest_mean": np.mean(highest),
+        "highest_median": np.median(highest),
+        "highest_max": np.max(highest),
+        "highest_std": np.std(highest),
+    }
 
-    return avg_score, avg_highest
+    return stats
 
 
 def train(eval_env, model, config):
@@ -65,16 +74,26 @@ def train(eval_env, model, config):
             ),
         )
 
-        avg_score, avg_highest = eval(eval_env, model, config["eval_episode_num"])
-        is_better = current_best < avg_score
+        stats = eval(eval_env, model, config["eval_episode_num"])
+        is_better = current_best < stats["score_mean"]
 
-        print(f"epoch: {epoch} | avg score: {avg_score} | avg highest: {avg_highest} | best: {is_better}")
-        wandb.log({"avg_highest": avg_highest, "avg_score": avg_score})
+        print_stats(epoch, stats)
+        wandb.log(stats)
+
+        # print(f"epoch: {epoch} | avg score: {avg_score} | avg highest: {avg_highest} | best: {is_better}")
+        # wandb.log({"avg_highest": avg_highest, "avg_score": avg_score})
 
         if is_better:
-            current_best = avg_score
+            current_best = stats["score_mean"]
             save_path = config["save_path"]
-            model.save(f"{save_path}/{epoch}")
+            model.save(f"{save_path}")
+
+
+def print_stats(epoch, stats):
+    output = f"epoch: {epoch:<3} | "
+    for key, value in stats.items():
+        output += f"{key}: {value:4.1f} | "
+    print(output)
 
 
 if __name__ == "__main__":
@@ -97,7 +116,7 @@ if __name__ == "__main__":
         my_config["policy_network"],
         train_env,
         verbose=0,
-        tensorboard_log=my_config["run_id"],
+        # tensorboard_log=my_config["run_id"],
         learning_rate=my_config["learning_rate"],
     )
     # model.set_logger(logger)
