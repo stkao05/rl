@@ -8,6 +8,7 @@ from wandb.integration.sb3 import WandbCallback
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecVideoRecorder
 from stable_baselines3 import A2C, DQN, PPO, SAC
+from stable_baselines3.common.logger import configure
 
 warnings.filterwarnings("ignore")
 register(id="2048-v0", entry_point="envs:My2048Env")
@@ -17,9 +18,9 @@ my_config = {
     "algorithm": PPO,
     "policy_network": "MlpPolicy",
     "save_path": "models/sample_model",
-    "epoch_num": 5,
+    "epoch_num": 50,
+    "eval_episode_num": 50,
     "timesteps_per_epoch": 1000,
-    "eval_episode_num": 10,
     "learning_rate": 1e-4,
 }
 
@@ -59,7 +60,7 @@ def train(eval_env, model, config):
             total_timesteps=config["timesteps_per_epoch"],
             reset_num_timesteps=False,
             callback=WandbCallback(
-                gradient_save_freq=100,
+                gradient_save_freq=100, # unsure how to intepret it
                 verbose=2,
             ),
         )
@@ -77,11 +78,13 @@ def train(eval_env, model, config):
 
 
 if __name__ == "__main__":
+    # logger = configure("/tmp/sb3_log/", ["stdout", "tensorboard"])
+
     run = wandb.init(
         project="rl-2048",
         config=my_config,
-        sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
-        id=my_config["run_id"],
+        # sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
+        # id=my_config["run_id"],
     )
 
     num_train_envs = 2
@@ -97,5 +100,6 @@ if __name__ == "__main__":
         tensorboard_log=my_config["run_id"],
         learning_rate=my_config["learning_rate"],
     )
+    # model.set_logger(logger)
 
     train(eval_env, model, my_config)
