@@ -19,7 +19,7 @@ my_config = {
     "algorithm": PPO,
     "policy_network": "MlpPolicy",
     "save_path": "models/sample_model",
-    "epoch_num": 10,
+    "epoch_num": 100,
     "eval_episode_num": 100,
     "timesteps_per_epoch": 1000,
     "learning_rate": 1e-4,
@@ -34,18 +34,24 @@ def eval(env, model, eval_episode_num):
     """Evaluate the model and return avg_score and avg_highest"""
     score = []
     highest = []
+    step_count = []
+    illegal_count = []
 
     for seed in range(eval_episode_num):
         done = False
         env.seed(seed) # set seed using old Gym API
         obs = env.reset()
+        count = 0
 
         while not done:
             action, _state = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
+            count += 1
 
         score.append(info[0]["score"])
         highest.append(info[0]["highest"])
+        step_count.append(count)
+        illegal_count.append(1 if info[0]["illegal_move"] else 0)
 
     stats = {
         "score_mean": np.mean(score),
@@ -56,6 +62,11 @@ def eval(env, model, eval_episode_num):
         "highest_median": np.median(highest),
         "highest_max": np.max(highest),
         "highest_std": np.std(highest),
+        "step_count_mean": np.mean(step_count),
+        "step_count_median": np.median(step_count),
+        "step_count_max": np.max(step_count),
+        "step_count_std": np.std(step_count),
+        "illegal_count": np.sum(illegal_count) / eval_episode_num
     }
 
     return stats
