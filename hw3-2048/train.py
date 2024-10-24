@@ -103,7 +103,7 @@ def train(eval_env, model, config):
 def print_stats(epoch, stats):
     output = f"epoch: {epoch:<3} | "
     for key, value in stats.items():
-        output += f"{key}: {value:4.1f} | "
+        output += f"{key}: {value:4.2f} | "
     print(output)
 
 
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         project="rl-2048",
         config=my_config,
         # sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
-        # id=my_config["run_id"],
+        # id="just-negative",
     )
 
     num_train_envs = 2
