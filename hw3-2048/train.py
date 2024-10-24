@@ -19,7 +19,7 @@ my_config = {
     "algorithm": PPO,
     "policy_network": "MlpPolicy",
     "save_path": "models/sample_model",
-    "epoch_num": 100,
+    "epoch_num": 200,
     "eval_episode_num": 100,
     "timesteps_per_epoch": 1000,
     "learning_rate": 1e-4,
